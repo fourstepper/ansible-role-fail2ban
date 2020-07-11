@@ -1,0 +1,38 @@
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+  tags:
+    - packages
+
+- name: Install required packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ init_packages }}"
+  tags:
+    - packages
+
+- name: enable SSH jail
+  template:
+    src: template/ssh_jail.conf.j2
+    dest: /etc/fail2ban/jail.d/ssh_jail.conf
+    owner: root
+    group: root
+    mode: '644'
+
+- name: global config
+  template:
+    src: template/global.conf.j2
+    dest: /etc/fail2ban/jail.d/global.conf
+    owner: root
+    group: root
+    mode: '644'
+
+- name: fail2ban - Enable
+  systemd:
+    name: fail2ban
+    enabled: yes
+    state: started
+    masked: no
+
+
+
