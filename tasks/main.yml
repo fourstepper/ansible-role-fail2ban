@@ -1,17 +1,19 @@
 - name: Include OS-specific variables.
   include_vars: "{{ ansible_os_family }}.yml"
-  tags:
-    - packages
+
+- name: Install EPEL
+  yum:
+    name: epel-release
+    state: present
+  when: ansible_facts['os_family'] == RedHat
 
 - name: Install required packages
   package:
     name: "{{ item }}"
     state: present
   with_items: "{{ init_packages }}"
-  tags:
-    - packages
 
-- name: enable SSH jail
+- name: Configure SSH jail
   template:
     src: template/ssh_jail.conf.j2
     dest: /etc/fail2ban/jail.d/ssh_jail.conf
@@ -19,7 +21,7 @@
     group: root
     mode: '644'
 
-- name: global config
+- name: Copy global config
   template:
     src: template/global.conf.j2
     dest: /etc/fail2ban/jail.d/global.conf
@@ -27,12 +29,9 @@
     group: root
     mode: '644'
 
-- name: fail2ban - Enable
+- name: Enable fail2ban service
   systemd:
     name: fail2ban
     enabled: yes
     state: started
     masked: no
-
-
-
